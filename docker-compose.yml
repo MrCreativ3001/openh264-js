@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  openh264-build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./openh264:/openh264
+      - ./build:/build
