@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   openh264-build:
     build:
@@ -7,4 +5,5 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./openh264:/openh264
+      - ./bindings:/bindings
       - ./build:/build
