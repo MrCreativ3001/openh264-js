@@ -10,7 +10,7 @@
 
     <script type="module">
         import MainModuleFactory from "../dist/decoder.js"
-        import { OpenH264Decoder } from "../dist/index.js"
+        import { OpenH264Decoder, copyIntoYuv } from "../dist/index.js"
 
         let canvas
         let context
@@ -78,34 +78,40 @@
             requestAnimationFrame(onAnimationFrame)
         }
 
-        function onFrame(buffer, stride, width, height) {
+        function onFrame(buffers, stride, width, height) {
             // -- Convert into RGBA image
-            const rgba = new Uint8ClampedArray(width * height * 4)
+            const buffer = copyIntoYuv(buffers, stride, width, height)
 
-            const [yPlane, uPlane, vPlane] = buffer
-            const [strideY, strideUV] = stride
+            const ySize = width * height
+            const uvSize = (width >> 1) * (height >> 1)
+
+            const yPlane = buffer.subarray(0, ySize)
+            const uPlane = buffer.subarray(ySize, ySize + uvSize)
+            const vPlane = buffer.subarray(ySize + uvSize, ySize + uvSize * 2)
+
+            const rgba = new Uint8ClampedArray(width * height * 4)
 
             let rgbaIndex = 0
 
             for (let y = 0; y < height; y++) {
-                const yRow = y * strideY
-                const uvRow = (y >> 1) * strideUV
+                const yRow = y * width
+                const uvRow = (y >> 1) * (width >> 1)
 
                 for (let x = 0; x < width; x++) {
                     const yValue = yPlane[yRow + x]
 
                     const uvIndex = uvRow + (x >> 1)
-                    const uValue = uPlane[uvIndex] - 128
-                    const vValue = vPlane[uvIndex] - 128
+                    const u = uPlane[uvIndex] - 128
+                    const v = vPlane[uvIndex] - 128
 
-                    // BT.601 conversion
-                    let r = yValue + 1.402 * vValue
-                    let g = yValue - 0.344136 * uValue - 0.714136 * vValue
-                    let b = yValue + 1.772 * uValue
+                    // BT.601
+                    let r = yValue + 1.402 * v
+                    let g = yValue - 0.344136 * u - 0.714136 * v
+                    let b = yValue + 1.772 * u
 
-                    rgba[rgbaIndex++] = Math.max(0, Math.min(255, r))
-                    rgba[rgbaIndex++] = Math.max(0, Math.min(255, g))
-                    rgba[rgbaIndex++] = Math.max(0, Math.min(255, b))
+                    rgba[rgbaIndex++] = r < 0 ? 0 : r > 255 ? 255 : r
+                    rgba[rgbaIndex++] = g < 0 ? 0 : g > 255 ? 255 : g
+                    rgba[rgbaIndex++] = b < 0 ? 0 : b > 255 ? 255 : b
                     rgba[rgbaIndex++] = 255
                 }
             }

@@ -14,11 +14,22 @@ Build using the docker compose file:
 docker compose up
 ```
 
-## Example
-
 After successfully building the emscripten files run:
 ```
+npm install
 npm run build
 ```
 
 The final output files will be in `/dist`
+
+## Example
+
+Firstly build the files.
+
+After that use a tool like http-server to view the web page:
+```
+npm install --global http-server
+http-server
+```
+
+Go to `localhost:8080/example/example.html`
