@@ -8,9 +8,14 @@ cd /emscripten
 # Build openh264
 cd /openh264
 
-emmake make OS=linux ARCH=asmjs libraries
+emmake make clean
+emmake make OS=linux ARCH=asmjs libraries \
+    CFLAGS="-O3 -flto -fno-exceptions -fno-rtti" \
+    CXXFLAGS="-O3 -flto -fno-exceptions -fno-rtti"
+
 
 emcc /bindings/decoder.cpp /bindings/thread.cpp /openh264/*.a \
+    -O3 \
     -o /build/decoder.js \
     -s MODULARIZE=1 \
     -s EXPORT_ES6=1 \
@@ -19,6 +24,8 @@ emcc /bindings/decoder.cpp /bindings/thread.cpp /openh264/*.a \
     -s ALLOW_MEMORY_GROWTH \
     -s EXPORTED_FUNCTIONS="['_malloc','_free','_openh264_decoder_create','_openh264_decoder_decode','_openh264_decoder_destroy']" \
     -s EXPORTED_RUNTIME_METHODS="['stackAlloc','stackSave','stackRestore','setValue','getValue','writeArrayToMemory','HEAPU8','HEAPU32']" \
+    -s ASSERTIONS=0 \
+    -flto \
     --emit-tsd /build/decoder.d.ts
 
 echo "openh264 build successful"
