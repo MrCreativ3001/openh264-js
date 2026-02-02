@@ -1,4 +1,4 @@
-// See TODO: ADD LINK
+// See https://github.com/MrCreativ3001/openh264-js
 
 import { MainModule } from "./decoder.js";
 
