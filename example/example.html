@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H264 Example</title>
+
+    <script type="module">
+        import MainModuleFactory from "../dist/decoder.js"
+        import { OpenH264Decoder } from "../dist/index.js"
+
+        let canvas
+        let context
+        let decoder
+
+        let filePosition = 0
+        let file
+
+        async function start() {
+            canvas = document.getElementById("video")
+            context = canvas.getContext("2d")
+
+            const module = await MainModuleFactory()
+            decoder = new OpenH264Decoder(module, {
+                onFrame: onFrame
+            })
+
+            const buffer = await fetch("./example.h264").then(response => response.arrayBuffer())
+            file = new Uint8Array(buffer)
+
+            requestAnimationFrame(onAnimationFrame)
+        }
+
+        function onAnimationFrame() {
+            // -- Get the next annex b start code
+            let lastBytes = [1, 1, 1, 1]
+            let startSearch = filePosition
+
+            let nalu
+
+            while (true) {
+                if (lastBytes[0] == 0 && lastBytes[1] == 0 && lastBytes[2] == 0 && lastBytes[3] == 1) {
+                    // 4 Byte Start Code
+                    nalu = file.subarray(startSearch, filePosition - 4)
+                    if (nalu.length != 0) {
+                        filePosition -= 4
+                        break
+                    }
+                } else if (lastBytes[1] == 0 && lastBytes[2] == 0 && lastBytes[3] == 1) {
+                    // 3 Byte Start Code
+                    nalu = file.subarray(startSearch, filePosition - 3)
+                    if (nalu.length != 0) {
+                        filePosition -= 3
+                        break
+                    }
+                }
+
+                lastBytes.shift()
+                lastBytes[3] = file[filePosition]
+                filePosition += 1
+
+                if (filePosition >= file.length) {
+                    // We're finished with the file
+                    alert("Video Finished")
+
+                    // Destroy the decoder
+                    decoder.destroy()
+                    return
+                }
+            }
+
+            // -- Decode the frame
+            decoder.decode(nalu)
+
+            requestAnimationFrame(onAnimationFrame)
+        }
+
+        function onFrame(buffer, stride, width, height) {
+            // -- Convert into RGBA image
+            const rgba = new Uint8ClampedArray(width * height * 4)
+
+            const [yPlane, uPlane, vPlane] = buffer
+            const [strideY, strideUV] = stride
+
+            let rgbaIndex = 0
+
+            for (let y = 0; y < height; y++) {
+                const yRow = y * strideY
+                const uvRow = (y >> 1) * strideUV
+
+                for (let x = 0; x < width; x++) {
+                    const yValue = yPlane[yRow + x]
+
+                    const uvIndex = uvRow + (x >> 1)
+                    const uValue = uPlane[uvIndex] - 128
+                    const vValue = vPlane[uvIndex] - 128
+
+                    // BT.601 conversion
+                    let r = yValue + 1.402 * vValue
+                    let g = yValue - 0.344136 * uValue - 0.714136 * vValue
+                    let b = yValue + 1.772 * uValue
+
+                    rgba[rgbaIndex++] = Math.max(0, Math.min(255, r))
+                    rgba[rgbaIndex++] = Math.max(0, Math.min(255, g))
+                    rgba[rgbaIndex++] = Math.max(0, Math.min(255, b))
+                    rgba[rgbaIndex++] = 255
+                }
+            }
+
+            // -- Draw Image
+            canvas.width = width
+            canvas.height = height
+
+            const image = new ImageData(rgba, width, height)
+            context.putImageData(image, 0, 0)
+        }
+
+        start()
+    </script>
+</head>
+
+<body>
+
+    <canvas id="video"></canvas>
+
+</body>
+
+</html>

@@ -1,5 +1,7 @@
 #include "../openh264/codec/api/wels/codec_api.h"
 
+#include <string.h>
+
 extern "C" long openh264_decoder_create(ISVCDecoder **outDecoder) {
   ISVCDecoder *decoder;
   long error = WelsCreateDecoder(&decoder);
@@ -26,10 +28,11 @@ extern "C" long openh264_decoder_create(ISVCDecoder **outDecoder) {
 
 extern "C" long openh264_decoder_decode(ISVCDecoder *decoder,
                                         unsigned char *frame, int frameLen,
-                                        unsigned char **output, int *outWidth,
+                                        unsigned char *output[3], int *outWidth,
                                         int *outHeight, int *outStride,
-                                        char *outFrameReady) {
-  SBufferInfo info = {0};
+                                        int *outFrameReady) {
+  SBufferInfo info;
+  memset(&info, 0, sizeof(info));
 
   long error = decoder->DecodeFrameNoDelay(frame, frameLen, output, &info);
 
