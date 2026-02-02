@@ -15,11 +15,9 @@ extern "C" long openh264_decoder_create(ISVCDecoder **outDecoder) {
 
   error = decoder->Initialize(&params);
   if (error != 0) {
-    WelsDestroyDecoder(*outDecoder);
+    WelsDestroyDecoder(decoder);
     return error;
   }
-
-  decoder->SetOption(DECODER_OPTION_NUM_OF_THREADS, 0);
 
   *outDecoder = decoder;
 
@@ -28,12 +26,18 @@ extern "C" long openh264_decoder_create(ISVCDecoder **outDecoder) {
 
 extern "C" long openh264_decoder_decode(ISVCDecoder *decoder,
                                         unsigned char *frame, int frameLen,
-                                        unsigned char **output, int outputLen,
-                                        int *outWidth, int *outHeight,
-                                        bool *outFrameReady) {
-  SBufferInfo info;
+                                        unsigned char **output, int *outWidth,
+                                        int *outHeight, int *outStride,
+                                        char *outFrameReady) {
+  SBufferInfo info = {0};
 
   long error = decoder->DecodeFrameNoDelay(frame, frameLen, output, &info);
+
+  *outWidth = info.UsrData.sSystemBuffer.iWidth;
+  *outHeight = info.UsrData.sSystemBuffer.iHeight;
+  outStride[0] = info.UsrData.sSystemBuffer.iStride[0];
+  outStride[1] = info.UsrData.sSystemBuffer.iStride[1];
+  *outFrameReady = info.iBufferStatus;
 
   return error;
 }

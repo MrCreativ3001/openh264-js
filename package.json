@@ -1,0 +1,15 @@
+{
+  "name": "openh264-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node ./build.cjs && tsc"
+  },
+  "author": "MrCreativ3001",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "typescript": "5.9.3"
+  }
+}
