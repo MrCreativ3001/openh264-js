@@ -14,7 +14,7 @@ emcc /bindings/decoder.cpp /bindings/thread.cpp /openh264/*.a \
     -o /build/decoder.js \
     -s MODULARIZE=1 \
     -s EXPORT_ES6=1 \
-    -s ENVIRONMENT=web \
+    -s ENVIRONMENT=web,worker \
     -s SINGLE_FILE=1 \
     -s ALLOW_MEMORY_GROWTH \
     -s EXPORTED_FUNCTIONS="['_malloc','_free','_openh264_decoder_create','_openh264_decoder_decode','_openh264_decoder_destroy']" \

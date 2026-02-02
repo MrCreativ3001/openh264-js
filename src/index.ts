@@ -1,5 +1,7 @@
 // See https://github.com/MrCreativ3001/openh264-js
 
+// You'll need to compile the decoder yourself because I don't want to distribute it.
+
 import { MainModule } from "./decoder.js";
 
 // TODO: support LTR? moonlight does?

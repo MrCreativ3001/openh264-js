@@ -16,6 +16,7 @@ declare namespace RuntimeExports {
     function getValue(ptr: number, type?: string): any;
     function writeArrayToMemory(array: any, buffer: any): void;
     let HEAPU8: any;
+    let HEAPU32: any;
 }
 interface WasmModule {
   _openh264_decoder_create(_0: number): number;
